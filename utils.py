@@ -2,7 +2,7 @@
 import polars as pl
 import pandas as pd
 import pathlib
-
+from datetime import datetime
 
 PATH = pathlib.Path(__file__).parent.resolve()
 
@@ -12,7 +12,15 @@ ESTADOS = [
     'SP', 'SE', 'TO'
 ]
 
-ANOS = [2020, 2021, 2022, 2023,'Todos']
+
+list_pos = [
+    'POS_FLUA', 'POS_FLUB', 'POS_SARS2', 'POS_VSR',
+    'POS_PARA1', 'POS_PARA2', 'POS_PARA3', 'POS_PARA4' ,
+    'POS_ADENO', 'POS_METAP', 'POS_BOCA', 'POS_RINO', 'POS_OUTROS'
+]
+
+
+ANOS = [2022, 2023,'Todos']
 
 FAIXAS_ETARIAS = ['Adulto', 'Idoso', 'Criança', 'Todos']
 
@@ -33,9 +41,10 @@ def _group_by_columns(estado, faixa_etaria) -> pd.DataFrame:
     if faixa_etaria != 'Todos':
         group_by_ = group_by_ + ['FAIXA_ETARIA']
 
-    pos = pl.scan_parquet(f'{PATH}/data/df_positivos_att.parquet')
-    df = (pos.
-        with_columns(
+    pos = pl.scan_csv(f'{PATH}/data/positive_distribution_dts.csv')
+    df = (pos
+        .filter(pl.col('POS_SUM') > 0)
+        .with_columns(
         [
             pl.when(pl.col('IDADE_ANO') <= 16)
             .then('CRIANÇA')
@@ -45,37 +54,64 @@ def _group_by_columns(estado, faixa_etaria) -> pd.DataFrame:
             .alias('FAIXA_ETARIA'),
         ])
         .groupby(
-            ['ANO_SIN_PRI', 'SEM_SIN_PRI', 'SEM_PRI'] + group_by_
+            ['DT_FILE','ANO_SIN_PRI','SEM_SIN_PRI'] + group_by_
         )
         .agg(
             [
-                pl.count().alias("N_INTERNACOES"),
-                pl.col('POS_FLUA').mean(),
-                pl.col('POS_FLUB').mean(),
-                pl.col('POS_SARS2').mean(),
-                pl.col('POS_VSR').mean(),
-                pl.col('POS_PARA1').mean(),
-                pl.col('POS_PARA2').mean(),
-                pl.col('POS_PARA3').mean(),
-                pl.col('POS_ADENO').mean(),
-                pl.col('POS_DEMAIS').mean()
+                pl.col('POS_FLUA').sum(),
+                pl.col('POS_FLUB').sum(),
+                pl.col('POS_SARS2').sum(),
+                pl.col('POS_VSR').sum(),
+                pl.col('POS_PARA1').sum(),
+                pl.col('POS_PARA2').sum(),
+                pl.col('POS_PARA3').sum(),
+                pl.col('POS_PARA4').sum(),
+                pl.col('POS_ADENO').sum(),
+                pl.col('POS_METAP').sum(),
+                pl.col('POS_BOCA').sum(),
+                pl.col('POS_RINO').sum(),
+                pl.col('POS_OUTROS').sum(),
+                pl.col('POS_SUM').sum(),
             ]
         )
-        .sort(['ANO_SIN_PRI', 'SEM_SIN_PRI'])
-        .filter(pl.col('ANO_SIN_PRI') >= 2020)
     ).collect().to_pandas()
 
+    df = (df.rename(
+        columns = {'POS_SUM': 'TESTES'}
+    )
+    .reset_index()
+    .assign(
+        POS_FLUA = lambda x: x['POS_FLUA']/x['TESTES'],
+        POS_FLUB = lambda x: x['POS_FLUB']/x['TESTES'],
+        POS_SARS2 = lambda x: x['POS_SARS2']/x['TESTES'],
+        POS_VSR = lambda x: x['POS_VSR']/x['TESTES'],
+        POS_PARA1 = lambda x: x['POS_PARA1']/x['TESTES'],
+        POS_PARA2 = lambda x: x['POS_PARA2']/x['TESTES'],
+        POS_PARA3 = lambda x: x['POS_PARA3']/x['TESTES'],
+        POS_PARA4 = lambda x: x['POS_PARA4']/x['TESTES'],
+        POS_ADENO = lambda x: x['POS_ADENO']/x['TESTES'],
+        POS_METAP = lambda x: x['POS_METAP']/x['TESTES'],
+        POS_BOCA = lambda x: x['POS_BOCA']/x['TESTES'],
+        POS_RINO = lambda x: x['POS_RINO']/x['TESTES'],
+        POS_OUTROS = lambda x: x['POS_OUTROS']/x['TESTES'],
+        DT_SIN_PRI = lambda x: x.apply(lambda x: datetime.fromisocalendar(int(x['ANO_SIN_PRI']),int(x['SEM_SIN_PRI']), 1), axis=1),
+        DT_FILE = lambda x: pd.to_datetime(x['DT_FILE'], format='%Y-%m-%d'),
+        ANO_FILE = lambda x: (x['DT_FILE'].dt.isocalendar().year).astype(int), 
+        SEM_FILE = lambda x: (x['DT_FILE'].dt.isocalendar().week).astype(int),
+        DT_SEM_FILE = lambda x: x.apply(lambda x: datetime.fromisocalendar(int(x['ANO_FILE']),int(x['SEM_FILE']), 1), axis=1),
+        DIF_FILE_SIN = lambda x: ((x['DT_SEM_FILE'] - x['DT_SIN_PRI']).dt.days/7).astype(int),
+    )
+    .sort_values(['DT_SIN_PRI','DT_FILE'], ascending=[True,True])
+)
     if faixa_etaria != 'Todos':
         df = df[df['FAIXA_ETARIA'] == str.upper(faixa_etaria)]
 
     if estado != 'Todos':
         df = df[df['SG_UF_NOT'] == estado]
-
     return df
 
 
 def _update_index(df):
-    df['tmp'] = df['SEM_PRI'].apply(lambda x: x.split('/')[1])   
-    df.index = pd.to_datetime(df['tmp'], format='%Y-%m-%d')
-
+    df.index = pd.to_datetime(df['DT_SIN_PRI'], format='%Y-%m-%d')
+    df = df.drop_duplicates(subset='DT_SIN_PRI', keep='last')
     return df

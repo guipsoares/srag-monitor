@@ -1,130 +1,131 @@
-import numpy as np
-import plotly.express as px
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 from shiny import ui, render, App
 from shinywidgets import output_widget, render_widget
-from utils import generate_dataframe, ESTADOS, ANOS, FAIXAS_ETARIAS
+from utils import generate_dataframe, ESTADOS, ANOS, FAIXAS_ETARIAS, list_pos
 
 # Create some random data
 # A list of Python's built-in functions
 
 app_ui = ui.page_fluid(
-    ui.div(
-        ui.input_selectize(
-        "estado", "Estado", ESTADOS
-        ),
-        ui.input_selectize(
-            "ano", "Ano", ANOS,
-        ),
-        ui.input_select(
-            "faixa_etaria", "Faixa Etária", FAIXAS_ETARIAS
-        ),
-        class_="d-flex gap-3"
+    ui.tags.style(
+        """
+        ul.nav.nav-pills.nav-stacked {
+            width: 200px; /* Set the desired width value */
+        }
+        div.col-sm-4.well {
+            width: 300px;
+        }
+        div.d-flex.gap-3 {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        """
     ),
-    output_widget("my_widget"),
-    ui.div(
-        ui.input_selectize(
-            "srag", "SRAG", ['SARS2', 'FLUA', 'FLUB', 'VSR']
+    ui.navset_pill_list(
+        ui.nav(
+            "Prevalência dos Vírus",
+            ui.div(
+                ui.input_selectize(
+                    "estado", "Estado", ESTADOS
+                ),
+                ui.input_selectize(
+                    "ano", "Ano", ANOS,
+                ),
+                ui.input_select(
+                    "faixa_etaria", "Faixa Etária", FAIXAS_ETARIAS
+                ),
+                class_="d-flex gap-3"
+            ),
+            output_widget("graf_lin_list_simple"),
+            output_widget("barplot")
         ),
-        class_="d-flex gap-3"
+        ui.nav(
+            "Metodologia",
+            "TBD"
+        ),
+        ui.nav(
+            "Código fonte",
+            "TBD"
+        ),
+        ui.nav(
+            "Colabooradores",
+            "TBD"
+        ),
     ),
-    output_widget("media_movel")
+    
 )
 
 def server(input, output, session):
     @output
     @render_widget
-    def my_widget():
-        plot_df = generate_dataframe(input.estado(), input.faixa_etaria())
-        if input.ano() != "Todos":
-            plot_df = plot_df[plot_df["ANO_SIN_PRI"] == int(input.ano())]
-
-        fig = px.line(
-            plot_df,
-            x=plot_df.index, 
-            y=['POS_FLUA', 'POS_FLUB', 'POS_SARS2', 'POS_VSR'],
-            custom_data=["N_INTERNACOES", "SEM_PRI", "SEM_SIN_PRI", "ANO_SIN_PRI"]
-        )
-
-        fig.update_xaxes(
-            row=1, col=1, rangeslider_visible=True, tickformat="%b\n%Y", dtick="M1"
-        )
-        fig.update_yaxes(range=[0, 1])
-        fig.update_traces(
-            hovertemplate = "<br>".join([
-                                        "Positividade: %{y}",
-                                        "Semana: %{customdata[1]}",
-                                        "Semana epidemiologica: %{customdata[2]}",
-                                        "Ano: %{customdata[3]}",
-                                        "N internacoes semana: %{customdata[0]}",
-                                    ]),
-            mode="markers+lines")
-        fig.update_layout(
-            xaxis_title='Semana epidemiológica',
-            yaxis_title='Positividade',
-            title='Positividade pra diferentes SRAGs em cada semana epidemiológica',
-        )
-
+    def graf_lin_list_simple():
+        fig = make_subplots(rows=2, cols=1,shared_xaxes=False,row_heights=[0.8, 0.2])
+        df = generate_dataframe(input.estado(), input.faixa_etaria())
+        for pos in list_pos:
+            fig.add_trace(
+                go.Scatter(
+                    name=pos,
+                    x=df['DT_SIN_PRI'],
+                    y=df[pos],
+                    mode='lines',
+                    showlegend=True
+                ), 
+                row=1,
+                col=1
+            )
+            fig.update_layout(
+                height=600,
+                width=1200,
+                yaxis_title='Prop. Positivos',
+                yaxis2_title='Quantidade de testes',
+                title='Prevalência para o virus',
+                hovermode="x" 
+            )
         return fig
 
     @output
     @render_widget
-    def media_movel():
-        DF = generate_dataframe(input.estado(), input.faixa_etaria())
+    def barplot():
+        df = generate_dataframe(input.estado(), input.faixa_etaria())
+        fig = make_subplots(rows=2, cols=1,shared_xaxes=True,row_heights=[0.8, 0.2])
 
-        if input.ano() != "Todos":
-            DF = DF[DF["ANO_SIN_PRI"] == int(input.ano())]
-
-        DF['MA4'] = (DF[f"POS_{input.srag()}"].rolling(4).mean())
-        DF['MA8'] = (DF[f"POS_{input.srag()}"].rolling(8).mean())
-        DF['MA12'] = (DF[f"POS_{input.srag()}"].rolling(12).mean())
-        fig = go.Figure()
-
-        fig.add_trace(
-            go.Scatter(
-                x=DF.index,
-                y=DF.MA4,
-                mode='lines',
-                name='4 semanas',
-                customdata=np.stack((DF["SEM_PRI"], DF["ANO_SIN_PRI"], DF['SEM_SIN_PRI']), axis=-1)
-            )
+        for pos in list_pos[::-1]:
+            fig.add_trace(
+                go.Bar(
+                    name=pos,
+                    x=df['DT_SIN_PRI'],
+                    y=df[pos],
+                    showlegend=True
+                ),
+                row=1,
+                col=1
         )
+            
         fig.add_trace(
-            go.Scatter(
-                x=DF.index,
-                y=DF.MA8,
-                mode='lines',
-                name='8 semanas',
-                customdata=np.stack((DF["SEM_PRI"], DF["ANO_SIN_PRI"], DF['SEM_SIN_PRI']), axis=-1)
+                go.Scatter(
+                    x=df['DT_SIN_PRI'],
+                    y=df['TESTES'],
+                    name="Qtd. testes",
+                    showlegend=True,
+                ),
+                row=2,
+                col=1
             )
-        )
-        fig.add_trace(
-            go.Scatter(
-                x=DF.index,
-                y=DF.MA12,
-                mode='lines',
-                name='12 semanas',
-                customdata=np.stack((DF["SEM_PRI"], DF["ANO_SIN_PRI"], DF['SEM_SIN_PRI']), axis=-1)
-            )
-        )
 
         fig.update_layout(
-            xaxis_title='Semana epidemiológica',
-            yaxis_title='Media movel da positividade',
-            title='Media movel da positividade por semana epidemiológica',
+            height=600,
+            width=1200,
+            barmode='stack',
+            xaxis={'categoryorder':'array', 'categoryarray':list_pos},
+            yaxis_title='Prop. Positivos',
+            yaxis2_title='Quantidade de testes',
+            title='Prevalência para vírus',
+            hovermode="x" 
         )
 
-        fig.update_xaxes(tickformat="%b\n%Y", dtick="M1")
-        fig.update_traces(
-        hovertemplate = "<br>".join([
-                                    "Pos. media: %{y}",
-                                    "Semana: %{customdata[0]}",
-                                    "Semana primeiros sintomas: %{customdata[2]}",
-                                    "Ano: %{customdata[1]}",
-                                ]),
-        mode="lines")
-
-        return fig 
+        return fig
 
 
 app = App(app_ui, server)
