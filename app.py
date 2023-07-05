@@ -51,7 +51,7 @@ app_ui = ui.page_fluid(
             "TBD"
         ),
         ui.nav(
-            "Colabooradores",
+            "Colaboradores",
             "TBD"
         ),
     ),
