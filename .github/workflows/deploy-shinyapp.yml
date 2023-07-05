@@ -18,9 +18,5 @@ jobs:
           SHINY_SECRET: ${{ secrets.SHINY_SECRET }}
           SHINY_TOKEN: ${{ secrets.SHINY_TOKEN }}
         run: >
-          docker build \
-          -t guipsoares/srag-monitor:latest \
-          --build-arg SHINY_TOKEN=env.SHINY_TOKEN \
-          --build-arg SHINY_SECRET=env.SHINY_SECRET \
-          --no-cache .
+          docker build -t guipsoares/srag-monitor:latest --build-arg SHINY_TOKEN=env.SHINY_TOKEN --build-arg SHINY_SECRET=env.SHINY_SECRET --no-cache .
 
