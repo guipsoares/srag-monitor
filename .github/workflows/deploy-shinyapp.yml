@@ -15,7 +15,9 @@ jobs:
 
       - name: build container 
         run: >
-          docker build \
+          echo SHINY_TOKEN=${{ secrets.SHINY_TOKEN }}
+          && echo SHINY_SECRET=${{ secrets.SHINY_SECRET }}
+          && docker build \
           -t guipsoares/srag-monitor:latest \
           --build-arg SHINY_TOKEN=${{ secrets.SHINY_TOKEN }} \
           --build-arg SHINY_SECRET=${{ secrets.SHINY_SECRET }} \
