@@ -1,0 +1,23 @@
+name: Run on push to main
+
+on:
+  push:
+    branches: [ main ]
+
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: Ubuntu-20.04
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: build container 
+        run: >
+          docker build \
+          -t guipsoares/srag-monitor:latest \
+          --build-arg SHINY_TOKEN= ${{ secrets.SHINY_TOKEN }} \
+          --build-arg SHINY_SECRET=${{ secrets.SHINY_SECRET }} \
+          --no-cache .
+
