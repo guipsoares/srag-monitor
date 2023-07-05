@@ -8,10 +8,10 @@ WORKDIR /shinyapp
 ARG SHINY_TOKEN
 ARG SHINY_SECRET
 
-RUN cat ${SHINY_TOKEN}-${SHINY_SECRET}
+RUN echo $SHINY_TOKEN-$SHINY_SECRET
 RUN rsconnect add \
     --account guipsoares \
     --name guipsoares \
-    --token ${SHINY_TOKEN} \
-    --secret ${SHINY_SECRET}
+    --token $SHINY_TOKEN \
+    --secret $SHINY_SECRET
 RUN rsconnect deploy shiny .
