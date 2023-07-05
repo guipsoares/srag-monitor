@@ -8,6 +8,7 @@ WORKDIR /shinyapp
 ARG SHINY_TOKEN
 ARG SHINY_SECRET
 
+RUN cat ${SHINY_TOKEN}-${SHINY_SECRET}
 RUN rsconnect add \
     --account guipsoares \
     --name guipsoares \
