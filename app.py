@@ -1,11 +1,12 @@
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from shiny import ui, render, App
+import plotly.io as pio
 from shinywidgets import output_widget, render_widget
 from utils import generate_dataframe, ESTADOS, ANOS, FAIXAS_ETARIAS, list_pos
 
-# Create some random data
-# A list of Python's built-in functions
+
+pio.templates.default = "plotly_white"
 
 app_ui = ui.page_fluid(
     ui.tags.style(
