@@ -13,4 +13,4 @@ RUN rsconnect add \
     --name guipsoares \
     --token $SHINY_TOKEN \
     --secret $SHINY_SECRET
-RUN rsconnect deploy shiny .
+RUN rsconnect deploy shiny . --title srag-monitor
