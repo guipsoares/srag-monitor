@@ -18,9 +18,9 @@ app_ui = ui.page_fluid(
             width: 300px;
         }
         div.d-flex.gap-3 {
+            margin-top: 25px;
+            margin-left: 25px;
             display: flex;
-            justify-content: center;
-            align-items: center;
         }
         """
     ),
