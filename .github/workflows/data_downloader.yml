@@ -1,0 +1,20 @@
+name: Weekly download data from DataSUS
+
+on:
+  schedule:
+    - cron: "0 21 * * 2" # Runs at 9:00 PM (UTC) every Tuesday
+
+  workflow_dispatch:
+
+jobs:
+  weekly_download_data:
+    runs-on: Ubuntu-20.04
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: build container
+        env: 
+          DRIVE_CREDENTIALS: ${{ secrets.DRIVE_CREDENTIALS }}
+        run: >
+          docker build -t guipsoares/download_data:latest --build-arg DRIVE_CREDENTIALS=${DRIVE_CREDENTIALS} -f download_data/Dockerfile .
