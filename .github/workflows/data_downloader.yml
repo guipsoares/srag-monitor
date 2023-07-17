@@ -16,5 +16,7 @@ jobs:
       - name: build container
         env: 
           DRIVE_CREDENTIALS: ${{ secrets.DRIVE_CREDENTIALS }}
+        build-args: |
+          DRIVE_CREDENTIALS=${DRIVE_CREDENTIALS}
         run: >
-          docker build -t guipsoares/download_data:latest --build-arg DRIVE_CREDENTIALS=${DRIVE_CREDENTIALS} -f download_data/Dockerfile .
+          docker build -t guipsoares/download_data:latest -f download_data/Dockerfile .
