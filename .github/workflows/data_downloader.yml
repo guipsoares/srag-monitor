@@ -15,7 +15,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: .
-          file: ./download_data/Dockerfile
+          file: download_data/Dockerfile
           push: false
           build-args: DRIVE_CREDENTIALS=${{ secrets.DRIVE_CREDENTIALS }}
 
