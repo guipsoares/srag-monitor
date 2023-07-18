@@ -15,5 +15,5 @@ jobs:
 
       - name: build-1
         run: >
-          docker build -f download_data/Dockerfile --build-arg DRIVE_CREDENTIALS=${{ secrets.DRIVE_CREDENTIALS }} --no-cache .
+          docker build -f download_data/Dockerfile . --build-arg DRIVE_CREDENTIALS=${{ secrets.DRIVE_CREDENTIALS }}
 
