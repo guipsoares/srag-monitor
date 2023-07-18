@@ -9,11 +9,9 @@ on:
 jobs:
   weekly_download_data:
     runs-on: Ubuntu-20.04
-
-    steps:
-      - uses: docker/build-push-action@v2
-      - name: build container 
-        env: 
-          DRIVE_CREDENTIALS: ${{ secrets.DRIVE_CREDENTIALS }}          
-        run: >
-          docker build . -t guipsoares/download_data:latest --build-arg DRIVE_CREDENTIALS=${DRIVE_CREDENTIALS} -f download_data/Dockerfile --no-cache
+    uses: docker/build-push-action@v2
+      with:
+        context: .
+        file: download_data/Dockerfile
+        push: false
+        build-args: DRIVE_CREDENTIALS=${{ secrets.DRIVE_CREDENTIALS }}
