@@ -17,4 +17,4 @@ jobs:
         env: 
           DRIVE_CREDENTIALS: ${{ secrets.DRIVE_CREDENTIALS }}
         run: >
-          docker build . -t guipsoares/srag-monitor:latest --build-arg DRIVE_CREDENTIALS=${DRIVE_CREDENTIALS} --no-cache
+          docker build -f download_data/Dockerfile -t guipsoares/download_data:latest --build-arg DRIVE_CREDENTIALS=${DRIVE_CREDENTIALS} --no-cache .
