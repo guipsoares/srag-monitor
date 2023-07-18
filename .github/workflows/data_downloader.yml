@@ -11,12 +11,9 @@ jobs:
     runs-on: Ubuntu-20.04
 
     steps:
-      - uses: actions/checkout@v2
-
       - name: build container
+        uses: docker/build-push-action@v2
         env: 
-          DRIVE_CREDENTIALS: ${{ secrets.DRIVE_CREDENTIALS }}
-        with:
-          build-args: DRIVE_CREDENTIALS=${DRIVE_CREDENTIALS}
+          DRIVE_CREDENTIALS: ${{ secrets.DRIVE_CREDENTIALS }}          
         run: >
-          docker build -t guipsoares/download_data:latest -f download_data/Dockerfile .
+          docker build . -t guipsoares/download_data:latest --build-arg DRIVE_CREDENTIALS=${DRIVE_CREDENTIALS} -f download_data/Dockerfile --no-cache
