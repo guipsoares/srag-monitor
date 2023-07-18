@@ -11,8 +11,8 @@ jobs:
     runs-on: Ubuntu-20.04
 
     steps:
-      - name: build container
-        uses: docker/build-push-action@v2
+      - uses: docker/build-push-action@v2
+      - name: build container 
         env: 
           DRIVE_CREDENTIALS: ${{ secrets.DRIVE_CREDENTIALS }}          
         run: >
