@@ -15,11 +15,5 @@ jobs:
 
       - name: build-1
         run: |
-          docker build . -f download_data/Dockerfile --build-arg DRIVE_CREDENTIALS=${{ secrets.DRIVE_CREDENTIALS }}
-      - name: build-2
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          file: download_data/Dockerfile
-          push: false
-          build-args: DRIVE_CREDENTIALS=${{ secrets.DRIVE_CREDENTIALS }}
+          docker build -f download_data/Dockerfile --build-arg DRIVE_CREDENTIALS=${{ secrets.DRIVE_CREDENTIALS }} .
+
