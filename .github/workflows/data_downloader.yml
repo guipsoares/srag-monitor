@@ -13,6 +13,8 @@ jobs:
     steps:
       - name: build-1
         uses: docker/build-push-action@v2
+        run: >
+          ls
         with:
           context: .
           file: download_data/Dockerfile
