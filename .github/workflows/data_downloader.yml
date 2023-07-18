@@ -7,11 +7,14 @@ on:
   workflow_dispatch:
 
 jobs:
-  weekly_download_data:
+  build:
     runs-on: Ubuntu-20.04
-    uses: docker/build-push-action@v2
-    with:
-      context: .
-      file: download_data/Dockerfile
-      push: false
-      build-args: DRIVE_CREDENTIALS=${{ secrets.DRIVE_CREDENTIALS }}
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: build container
+        env: 
+          DRIVE_CREDENTIALS: ${{ secrets.DRIVE_CREDENTIALS }}
+        run: >
+          docker build . -t guipsoares/srag-monitor:latest --build-arg DRIVE_CREDENTIALS=${DRIVE_CREDENTIALS} --no-cache
