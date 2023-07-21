@@ -8,7 +8,7 @@ on:
 
 jobs:
   build:
-    runs-on: Ubuntu-20.04
+    runs-on: Ubuntu-20.04.
 
     steps:
       - uses: actions/checkout@v2
@@ -21,4 +21,5 @@ jobs:
           push: false
           build-args: |
             DRIVE_CREDENTIALS=${{ secrets.DRIVE_CREDENTIALS }}
-            CLIENT_SECRETS=$${{ secrets.CLIENT_SECRETS }}
+            CLIENT_SECRETS=${{ secrets.CLIENT_SECRETS }}
+
