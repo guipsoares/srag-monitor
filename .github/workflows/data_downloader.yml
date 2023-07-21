@@ -19,6 +19,6 @@ jobs:
           context: .
           file: download_data/Dockerfile
           push: false
-          build-args: DRIVE_CREDENTIALS=${{ secrets.DRIVE_CREDENTIALS }}
-
-
+          build-args: 
+            - DRIVE_CREDENTIALS=${{ secrets.DRIVE_CREDENTIALS }}
+            - CLIENT_SECRETS=$${{ secrets.CLIENT_SECRETS }}
