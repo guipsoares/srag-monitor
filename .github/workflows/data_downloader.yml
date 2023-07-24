@@ -2,7 +2,7 @@ name: Weekly download data from DataSUS
 
 on:
   schedule:
-    - cron: "0 21 * * 2" # Runs at 9:00 PM (UTC) every Tuesday
+    - cron: "0 21 * * 4" # Runs at 9:00 PM (UTC) every Tuesday
 
   workflow_dispatch:
 
