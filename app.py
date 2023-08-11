@@ -1,10 +1,14 @@
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
-from shiny import ui, render, App
-import plotly.io as pio
-from shinywidgets import output_widget, render_widget
-from utils import generate_dataframe, ESTADOS, ANOS, FAIXAS_ETARIAS, list_pos
+import json
 
+import pandas as pd
+import plotly.express as px
+import plotly.graph_objects as go
+import plotly.io as pio
+from plotly.subplots import make_subplots
+from shiny import App, render, ui
+from shinywidgets import output_widget, render_widget
+
+from utils import *
 
 pio.templates.default = "plotly_white"
 
@@ -18,6 +22,11 @@ app_ui = ui.page_fluid(
             width: 300px;
         }
         div.d-flex.gap-3 {
+            margin-top: 25px;
+            margin-left: 25px;
+            display: flex;
+        }
+        div.d-flex.gap-4 {
             margin-top: 25px;
             margin-left: 25px;
             display: flex;
@@ -40,7 +49,14 @@ app_ui = ui.page_fluid(
                 class_="d-flex gap-3"
             ),
             output_widget("graf_lin_list_simple"),
-            output_widget("barplot")
+            output_widget("barplot"),
+            ui.div(
+                ui.input_selectize(
+                    "estado_hm", "Estado", ESTADOS
+                ),
+                class_="d-flex gap-4"
+            ),
+            output_widget("heatmap_brasil")
         ),
         ui.nav(
             "Metodologia",
@@ -126,6 +142,61 @@ def server(input, output, session):
             hovermode="x" 
         )
 
+        return fig 
+
+    @output
+    @render_widget
+    def heatmap_brasil():
+        positive_distribution = pd.read_csv("pos_distri.csv", sep=";")
+
+        if input.estado_hm() == "Todos":
+            df = positive_distribution.groupby(["SG_UF_NOT"], as_index=False).sum(["POS_VSR"])
+            filename = "Brasil"
+            geojson = open_geojson(filename)
+            equiv = "UF"
+            locations = "SG_UF_NOT"
+            custom_data = ["SG_UF_NOT"]
+        else:
+            positive_distribution = positive_distribution.query(f"SG_UF_NOT=='{input.estado_hm()}'")
+            df = positive_distribution.groupby(["CO_MUN_NOT", "ID_MUNICIP"], as_index=False).sum(["POS_SARS2"])
+            filename = input.estado_hm()
+            mapp = {}
+            geojson = open_geojson(filename)
+            equiv = "GEOCODIGO"
+            for feat in geojson["features"]:
+                cod = feat["properties"][equiv]
+                mapp[cod[:-1]] = cod
+            df["CO_MUN_NOT"] = df["CO_MUN_NOT"].astype(str)
+            df["CO_MUN_NOT_ATT"] = df["CO_MUN_NOT"].map(mapp)
+            locations = "CO_MUN_NOT_ATT"
+            custom_data = ["ID_MUNICIP"]
+
+        lat, lon, zoom = get_lat_lon(input.estado_hm())
+
+        fig = px.choropleth_mapbox(
+            df,
+            locations = locations,
+            geojson = geojson,
+            color = "POS_SARS2",
+            featureidkey=f"properties.{equiv}",
+            mapbox_style = "carto-positron",
+            center={"lat":lat, "lon": lon},
+            zoom = zoom,
+            opacity = 0.5,
+            color_continuous_scale="reds",
+            custom_data=custom_data
+        )
+        fig.update_traces(
+            hovertemplate="<br>".join([
+                "Municipio: %{customdata[0]}",
+            ])
+        )
+        fig.update_layout(
+            autosize=False,
+            width=800,
+            height=800,
+        )
+        fig.layout.coloraxis.colorbar.title = 'Prob'
         return fig
 
 

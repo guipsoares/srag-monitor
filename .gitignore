@@ -46,3 +46,6 @@ dist/**
 *.xlf
 package.nls.*.json
 l10n/
+
+.ipynb_checkpoints/*
+to_ignore/*

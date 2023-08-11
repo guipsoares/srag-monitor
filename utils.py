@@ -1,4 +1,6 @@
 # type: ignore
+import json
+
 import polars as pl
 import pandas as pd
 import pathlib
@@ -115,3 +117,25 @@ def _update_index(df):
     df.index = pd.to_datetime(df['DT_SIN_PRI'], format='%Y-%m-%d')
     df = df.drop_duplicates(subset='DT_SIN_PRI', keep='last')
     return df
+
+
+def open_geojson(filename):
+    with open(f"geojson/{filename}.json") as response:
+        geojson = json.load(response)
+    return geojson
+
+
+def get_lat_lon(estado):
+
+    lat_lon_capitals = {
+        'Todos': [-14, -55], 'AC': [-10, -67], 'AL': [-9.5, -36.5], 'AP': [0, -51], 'AM': [-03.05, -60],
+        'BA': [-12.60, -38.30], 'CE': [-3.5, -38.3], 'DF': [-15.5, -47.5], 'ES': [-20.20, -40.20],
+        'GO': [-16.40, -50], 'MA': [-2.5, -44.2], 'MT': [-15.35, -56.05], 'MS': [-20.25, -54.5], 'MG': [-19.55, -43.56],
+        'PA': [-1.3, -48.3], 'PB': [-7.06, -34.5], 'PR': [-25.25, -50], 'PE': [-8.05, -34.05], 'PI': [-05.05, -48.5],
+        'RJ': [-22.5, -43.2], 'RN': [-5.5, -35.2], 'RS': [-30.01, -51.02], 'RO': [-08.5, -63.5], 'RR': [-2.5, -60.5],
+        'SC': [-27.5, -48.5], 'SP': [-23.5, -46.5], 'SE': [-10.5, -37.05], 'TO': [-10.12, -48.5]
+    }
+
+    zoom = 3 if estado == "Todos" else 5
+
+    return lat_lon_capitals.get(estado)[0], lat_lon_capitals.get(estado)[1], zoom
