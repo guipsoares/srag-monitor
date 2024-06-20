@@ -9,8 +9,8 @@ from pydrive.drive import GoogleDrive
 def download_data():
     today = datetime.now().date()
     one_week_ago = today - timedelta(days=7)
-    current_date = one_week_ago
-    for url_dir in ['2023/INFLUD23','2024/INFLUD24']: 
+    for url_dir in ['2023/INFLUD23','2024/INFLUD24']:
+        current_date = one_week_ago
         while current_date <= today:
             formatted_date = current_date.strftime('%d-%m-%Y')
             url = f"https://s3.sa-east-1.amazonaws.com/ckan.saude.gov.br/SRAG/{url_dir}-{formatted_date}.csv"
@@ -18,9 +18,9 @@ def download_data():
                 os.makedirs('data')
             try:
                 wget.download(url, 'data')
-                print(f"Found file from {formatted_date}")
+                print(f"Found file from {url_dir}-{formatted_date}")
             except:
-                print(f"There's no file from {formatted_date}")
+                print(f"There's no file from {url_dir}-{formatted_date}")
             current_date += timedelta(days=1)
 
 
